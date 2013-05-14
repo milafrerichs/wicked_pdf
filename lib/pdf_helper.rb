@@ -29,11 +29,7 @@ module PdfHelper
       log_pdf_creation
       options[:basic_auth] = set_basic_auth(options)
       options.delete :pdf
-      if options.multiple_templates
-        make_pdf_from_multiple((WickedPdf.config || {}).merge(options))
-      else
-        make_pdf((WickedPdf.config || {}).merge(options))
-      end
+      make_pdf((WickedPdf.config || {}).merge(options))
     else
       render_to_string_without_wicked_pdf(options, *args, &block)
     end
@@ -69,9 +65,8 @@ module PdfHelper
 
     def make_pdf_from_multiple(options = {})
       html_strings = []
-      options[:templates].each do |page_options|
-
-        render_opts = {:template => page_options[:template], :layout => page_options[:layout], :formats => page_options[:formats], :handlers => page_options[:handlers]}
+      options[:pages].each do |page_options|
+        render_opts = {:template => page_options[:template], :layout => page_options[:layout], :formats => page_options[:formats], :handlers => page_options[:handlers], :locals => page_options[:locals]}
         render_opts.merge!(:file => page_options[:file]) if page_options[:file]
         html_strings << render_to_string(render_opts)
       end
@@ -90,7 +85,12 @@ module PdfHelper
         render_opts.merge!(:file => options[:file]) if options[:file]
         render(render_opts)
       else
-        pdf_content = make_pdf(options)
+        if options[:multiple_pages]
+          pdf_content = make_pdf_from_multiple(options)
+        else
+          pdf_content = make_pdf(options)
+        end
+
         File.open(options[:save_to_file], 'wb') {|file| file << pdf_content } if options[:save_to_file]
         send_data(pdf_content, :filename => pdf_name + '.pdf', :type => 'application/pdf', :disposition => options[:disposition]) unless options[:save_only]
       end

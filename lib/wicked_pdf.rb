@@ -79,14 +79,15 @@ class WickedPdf
     temp_path = options.delete(:temp_path)
     generated_pdf_file = WickedPdfTempfile.new("wicked_pdf_generated_file.pdf", temp_path)
     files = ""
-    file_options = parse_options(options)
+    main_options = parse_options(options)
+    header_footer = parse_header_footer_options(options)
     strings.each do |string|
       string_file = WickedPdfTempfile.new("wicked_pdf.html", temp_path)
       string_file.write(string)
       string_file.close
-      files = "#{files} #{file_options} \"file:///#{string_file.path}\""
+      files = "#{files} #{header_footer} \"file:///#{string_file.path}\""
     end
-    command = "\"#{@exe_path}\" #{'-q ' unless on_windows?}#{parse_options(options)} #{files} \"#{generated_pdf_file.path}\" " # -q for no errors on stdout
+    command = "\"#{@exe_path}\" #{'-q ' unless on_windows?}#{main_options} #{files} \"#{generated_pdf_file.path}\" " # -q for no errors on stdout
     print_command(command) if in_development_mode?
     err = Open3.popen3(command) do |stdin, stdout, stderr|
       stderr.read
@@ -102,7 +103,6 @@ class WickedPdf
   rescue Exception => e
     raise "Failed to execute:\n#{command}\nError: #{e}"
   ensure
-    #string_file.close! if string_file
     generated_pdf_file.close! if generated_pdf_file && !return_file
   end
 
@@ -134,18 +134,25 @@ class WickedPdf
       end
     end
 
-    def parse_options(options)
-      [
-        parse_extra(options),
-        parse_header_footer(:header => options.delete(:header),
+    def parse_options(options, multiple=false)
+      option_array = [parse_extra(options)]
+      option_array << parse_header_footer(:header => options.delete(:header),
                             :footer => options.delete(:footer),
-                            :layout => options[:layout]),
+                            :layout => options[:layout]) unless multiple
+      option_array += [
         parse_toc(options.delete(:toc)),
         parse_outline(options.delete(:outline)),
         parse_margins(options.delete(:margin)),
         parse_others(options),
         parse_basic_auth(options)
-      ].join(' ')
+      ]
+      option_array.join(' ')
+    end
+
+    def parse_header_footer_options(options)
+      parse_header_footer(:header => options.delete(:header),
+                          :footer => options.delete(:footer))
+
     end
 
     def parse_extra(options)
