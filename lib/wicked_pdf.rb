@@ -71,6 +71,41 @@ class WickedPdf
     generated_pdf_file.close! if generated_pdf_file && !return_file
   end
 
+  def pdf_from_multiple_strings(strings, options={})
+    if WickedPdf.config[:retreive_version]
+      retreive_binary_version
+    end
+
+    temp_path = options.delete(:temp_path)
+    generated_pdf_file = WickedPdfTempfile.new("wicked_pdf_generated_file.pdf", temp_path)
+    files = ""
+    file_options = parse_options(options)
+    strings.each do |string|
+      string_file = WickedPdfTempfile.new("wicked_pdf.html", temp_path)
+      string_file.write(string)
+      string_file.close
+      files = "#{files} #{file_options} \"file:///#{string_file.path}\""
+    end
+    command = "\"#{@exe_path}\" #{'-q ' unless on_windows?}#{parse_options(options)} #{files} \"#{generated_pdf_file.path}\" " # -q for no errors on stdout
+    print_command(command) if in_development_mode?
+    err = Open3.popen3(command) do |stdin, stdout, stderr|
+      stderr.read
+    end
+    if return_file = options.delete(:return_file)
+      return generated_pdf_file
+    end
+    generated_pdf_file.rewind
+    generated_pdf_file.binmode
+    pdf = generated_pdf_file.read
+    raise "PDF could not be generated!\n Command Error: #{err}" if pdf and pdf.rstrip.length == 0
+    pdf
+  rescue Exception => e
+    raise "Failed to execute:\n#{command}\nError: #{e}"
+  ensure
+    #string_file.close! if string_file
+    generated_pdf_file.close! if generated_pdf_file && !return_file
+  end
+
   private
 
     def in_development_mode?

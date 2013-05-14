@@ -22,7 +22,7 @@ class WickedPdfTest < ActiveSupport::TestCase
     assert pdf.rstrip.end_with?("%%EOF")
     assert pdf.length > 100
   end
-  
+
   test "should generate PDF from html document with long lines" do
     wp = WickedPdf.new
     document_with_long_line_file = File.new("test/fixtures/document_with_long_line.html", "r")
@@ -30,6 +30,17 @@ class WickedPdfTest < ActiveSupport::TestCase
     assert pdf.start_with?("%PDF-1.4")
     assert pdf.rstrip.end_with?("%%EOF")
     assert pdf.length > 100
+  end
+
+  test "should generate PDF from multiple html documents with long lines" do
+    wp = WickedPdf.new
+    document_with_long_line_file = File.new("test/fixtures/document_with_long_line.html", "r")
+    another_document_with_long_line_file = File.new("test/fixtures/document_with_long_line.html", "r")
+    documents = [document_with_long_line_file.read, another_document_with_long_line_file.read]
+    pdf = wp.pdf_from_multiple_strings(documents)
+    assert pdf.start_with?("%PDF-1.4")
+    assert pdf.rstrip.end_with?("%%EOF")
+    assert pdf.length > 200
   end
 
   test "should raise exception when no path to wkhtmltopdf" do
