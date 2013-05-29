@@ -29,7 +29,12 @@ module PdfHelper
       log_pdf_creation
       options[:basic_auth] = set_basic_auth(options)
       options.delete :pdf
-      make_pdf((WickedPdf.config || {}).merge(options))
+      if options[:multiple_pages]
+        options.delete :multiple_pages
+        make_pdf_from_multiple((WickedPdf.config || {}).merge(options))
+      else
+        make_pdf((WickedPdf.config || {}).merge(options))
+      end
     else
       render_to_string_without_wicked_pdf(options, *args, &block)
     end
