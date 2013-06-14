@@ -81,8 +81,8 @@ class WickedPdf
     files = ""
     main_options = parse_options(options)
     header_footer = parse_header_footer_options(options)
-    strings.each do |string|
-      string_file = WickedPdfTempfile.new("wicked_pdf.html", temp_path)
+    strings.each do |string,index|
+      string_file = WickedPdfTempfile.new("wicked_pdf_#{index}.html", temp_path)
       string_file.write(string)
       string_file.close
       files = "#{files} #{header_footer} \"file:///#{string_file.path}\""
