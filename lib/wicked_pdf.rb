@@ -62,10 +62,10 @@ class WickedPdf
     generated_pdf_file.rewind
     generated_pdf_file.binmode
     pdf = generated_pdf_file.read
-    raise "PDF could not be generated!\n Command Error: #{err}" if pdf and pdf.rstrip.length == 0
+    raise "#{`wkhtmltopdf -V | grep 'wkhtmltopdf 0.'`.chomp} #{`whoami`.chomp}: PDF could not be generated!\n Command Error: #{err}" if pdf and pdf.rstrip.length == 0
     pdf
   rescue Exception => e
-    raise "Failed to execute:\n#{command}\nError: #{e}"
+    raise "Failed to execute:\n#{command}\nError: #{e}\nCommand Error: #{err}"
   ensure
     string_file.close! if string_file
     generated_pdf_file.close! if generated_pdf_file && !return_file
@@ -98,10 +98,10 @@ class WickedPdf
     generated_pdf_file.rewind
     generated_pdf_file.binmode
     pdf = generated_pdf_file.read
-    raise "PDF could not be generated!\n Command Error: #{err}" if pdf and pdf.rstrip.length == 0
+    raise "#{`wkhtmltopdf -V | grep 'wkhtmltopdf 0.'`.chomp} #{`whoami`.chomp}: PDF could not be generated!\n Command Error: #{err}" if pdf and pdf.rstrip.length == 0
     pdf
   rescue Exception => e
-    raise "Failed to execute:\n#{command}\nError: #{e}"
+    raise "Failed to execute:\n#{command}\nError: #{e}\nCommand Error: #{err}"
   ensure
     generated_pdf_file.close! if generated_pdf_file && !return_file
   end
